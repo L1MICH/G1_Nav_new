@@ -152,7 +152,7 @@
 公司地址：上海市浦东新区张江机器人谷  
 投递邮箱：707556641@qq.com  
 
-## 交流群及打赏
+## 联系方式及打赏
 <table style="margin: 0 auto;">
   <tr>
     <!-- 第一张图：固定宽度200px，居中显示 -->
@@ -161,7 +161,7 @@
     </td>
     <!-- 第二张图：与第一张保持相同宽度 -->
     <td style="padding: 0 10px; text-align: center;">
-      <img src="qun.jpg" alt="dayiqun" width="300" style="height: auto;">
+      <img src="contact" alt="dayiqun" width="300" style="height: auto;">
     </td>
   </tr>
 </table>
