@@ -1335,9 +1335,9 @@ int main(int argc, char **argv)
 
     // 设置全局指针和保存路径
     g_ground_pub_thread = &ground_pub_thread;
-    g_map_path = "/home/unitree/HongTu/G1Nav2D/src/fastlio2/PCD/map.pcd";
-    g_ground_map_path = "/home/unitree/HongTu/G1Nav2D/src/fastlio2/PCD/ground_map.pcd";
-    g_keyposes_path = "/home/unitree/HongTu/G1Nav2D/src/fastlio2/path/key_poses.txt";
+    g_map_path = "/home/water/WK/G1Nav2D/src/fastlio2/PCD/map.pcd";
+    g_ground_map_path = "/home/water/WK/G1Nav2D/src/fastlio2/PCD/ground_map.pcd";
+    g_keyposes_path = "/home/water/WK/G1Nav2D/src/fastlio2/path/key_poses.txt";
     map_builder.run();
     ground_pub_worker.join();
     return 0;

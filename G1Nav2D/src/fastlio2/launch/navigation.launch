@@ -5,14 +5,17 @@
     <rosparam command="load" file="$(find fastlio)/config/localize.yaml" />
     <node pkg="fastlio" type="localizer_node" name="localizer_node" output="screen"/>
     <node pkg="fastlio" type="slam_reloc.py" name="slam_reloc" output="screen">
-        <param name="pcd_path" value="/home/unitree/HongTu/G1Nav2D/src/fastlio2/PCD/map.pcd" />
+        <param name="pcd_path" value="/home/unitree/WK/G1Nav2D/src/fastlio2/PCD/map.pcd" />
     </node>
     <include file="$(find fastlio)/launch/gridmap_load.launch">
             <arg name="rviz" value="false"/>
     </include>
     <include file="$(find tool)/launch/downsample_pointcloud.launch">
-        <arg name="pcd_file" value="/home/unitree/HongTu/G1Nav2D/src/fastlio2/PCD/ground_map.pcd"/>
+        <arg name="pcd_file" value="/home/unitree/WK/G1Nav2D/src/fastlio2/PCD/ground_map.pcd"/>
     </include>
+    
+    <node pkg="tf" type="static_transform_publisher" name="slam_odom_to_odom" 
+        args="0 0 0 0 0 0 /slam_odom /odom 100" />
 
     <include file="$(find xju_pnc)/launch/move_base.launch" />
 
@@ -20,7 +23,6 @@
 
     <include file="$(find tool)/launch/body2any_pointcloud.launch">
     </include>
-
 
     <include file="$(find velocity_smoother_ema)/launch/velocity_smoother_ema.launch">
     </include>

@@ -1,12 +1,3 @@
-<div align="center">
-  <h1 align="center"> 「元启・鸿图HongTu」 </h1>
-  <h3 align="center"> 上海元启智体 </h3>
-</div>
-
-## 介绍
-> ***员工双休，教程会在工作日完善，可先自己尝试，若有疑问可加群联系。***
-## 部署
-
 ### 克隆仓库
   ``` bash
   git clone https://github.com/yuanqizhiti/HongTu.git

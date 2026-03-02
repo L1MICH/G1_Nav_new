@@ -12,6 +12,6 @@
     <param name="pointcloud_min_z" value="-0.1" />
 
     <remap from="/cloud_in" to="/body_cloud" />
- 
+    
   </node>
 </launch>

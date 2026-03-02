@@ -1,5 +1,4 @@
 <launch>
-
     <include file="$(find livox_ros_driver2)/launch_ROS1/msg_MID360.launch">
     </include>
     <rosparam command="load" file="$(find fastlio)/config/mapping.yaml" />
