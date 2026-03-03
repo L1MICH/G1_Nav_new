@@ -54,19 +54,33 @@ WK/
 ## 快速开始
 
 ### 1. 克隆仓库
+、、、
 bash
-git clone https://github.com/Dailywatero/WK.git
-cd WK
 
+git clone https://github.com/Dailywatero/WK.git
+
+cd WK
+、、、
 
 ### 2. 安装 Livox SDK2
 bash
+
+
 sudo apt install cmake
 
+
 git clone https://github.com/Livox-SDK/Livox-SDK2.git
+
+
 cd Livox-SDK2
+
+
 mkdir build && cd build
+
+
 cmake … && make -j
+
+
 sudo make install
 
 
