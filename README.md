@@ -6,8 +6,10 @@
 - 基于 FAST-LIO2 的3D激光里程计与建图
 - 离线点云地图定位与重定位
 - 2D栅格地图导航（支持 TEB 局部规划器）
+- 自主导航、动态路径规划（支持 TEB 局部规划器）
 - 集成语音助手，支持语音指令控制机器人运动
-- 宇树 G1 SDK 运动控制示例（含 MPC 控制）
+- 内置动作接口，可调用宇树内置动作、自己训练的舞蹈和动作
+- 内置多个运动控制算法（含 MPC、自适应MPC、PID、开环 控制）
 
 ---
 
@@ -63,13 +65,18 @@ cd WK
 
 ### 2. 安装 Livox SDK2
 ```bash
-
+cd 
 
 sudo apt install cmake
+
 git clone https://github.com/Livox-SDK/Livox-SDK2.git
+
 cd Livox-SDK2
+
 mkdir build && cd build
+
 cmake … && make -j
+
 sudo make install
 ```
 
@@ -78,16 +85,18 @@ sudo make install
 1. 修改本机与雷达 IP：
 ```bash
 cd WK/G1Nav2D/src/livox_ros_driver2/config
+
 gedit MID360_config.json
 ```
 根据你的网络环境修改 “lidar_configs” 里的雷达 IP 和 “host_net_info” 里的本机 IP
-雷达ip一般不用修改，192.168.123.120
+雷达ip一般不用修改：192.168.123.120；
 用ifconfig查自己的ip，要在同一网段下
 
 
 2. 修改地图保存路径：
 ```bash
 cd WK/G1Nav2D/src/fastlio2/src
+
 gedit map_builder_node.cpp
 ```
 将文件中地图保存路径（如 /home/water/map/）改为你自己的路径
@@ -100,11 +109,13 @@ cd WK/G1Nav2D
 建议先单独编译 livox_ros_driver2 和 fastlio2，避免消息头文件找不到
 ```bash
 catkin_make -DROS_EDITION=ROS1 --pkg livox_ros_driver2
+
 catkin_make -DROS_EDITION=ROS1 --pkg fastlio2
 
 #整体编译
 
 catkin_make
+
 source devel/setup.bash
 ```
 
@@ -124,7 +135,9 @@ ros-noetic-costmap-server
 **建图：**
 ```bash
 cd WK/G1Nav2D
+
 source devel/setup.bash
+
 roslaunch fastlio2 mapping.launch
 ```
 
@@ -133,13 +146,16 @@ roslaunch fastlio2 mapping.launch
 新开终端：
 ```bash
 cd WK/G1Nav2D
+
 source devel/setup.bash
+
 rosrun map_server map_saver map:=/projected_map -f /home/你的用户名/map/mymap
 ```
 
 ### 2. 编辑地图
 ```bash
 source devel/setup.bash
+
 roslaunch ros_map_edit map_edit.launch
 ```
 
@@ -151,6 +167,7 @@ roslaunch ros_map_edit map_edit.launch
 1. 修改地图加载路径：
 ```bash
 cd WK/G1Nav2D/src/fastlio2/launch
+
 gedit gridmap_load.launch
 ```
 修改 2dmap_file 参数为你保存的地图路径，例如：
@@ -159,33 +176,76 @@ gedit gridmap_load.launch
 2. 启动导航：
 ```bash
 cd WK/G1Nav2D
+
 source devel/setup.bash
+
 roslaunch fastlio2 navigation.launch
 ```
 3. 初始重定位（如有需要）：
 ```bash
 rosservice call /slam_reloc
+
 “{pcd_path: ‘/home/你的用户名/WK/G1Nav2D/src/fastlio2/PCD/map.pcd’,
 x: 0.0, y: 0.0, z: 0.0, roll: 0.0, pitch: 0.0, yaw: 0.0}”
 ```
 
 在 RViz 中确认点云与地图是否配准良好。
-
 ### 4. 运动控制（G1）
 
 参考宇树官方文档安装 `unitree_sdk2_python`：
 ```bash
 cd WK/unitree_sdk2_python/example/g1/high_level
+#提供了多种可选择的运控
+
+#基础的MPC控制
+g1_control_mpc.py
+
+#速度较快的mpc
+g1_control_mpc_fast.py
+
+#行走稳定的mpc
+g1_control_mpc_stable.py
+
+#自适应mpc
+g1_control_mpc_stable_fast.py
+
+#纯开环
+g1_control_openloop.py
+
+#闭环PID
+g1_control_pid.py
+
+#使用下方代码替换文件名和网口名即可
 python3 g1_control_mpc.py eth0 # 或其他 g1_control_*.py
+
 ```
 
-### 5. 语音交互导航（基于 py-xiaozhi）
+### 5. 自主导航（带动态避障）
+```bash
+cd WK/unitree_sdk2_python/example/g1/high_level
+#基础导航讲解程序，替换文字和坐标位置即可实现讲解
+multi_nav.py
+
+#提供讲解暂停和暂停时实现动作：如跳舞，挥手以及自定义内置动作，预留接口
+#也可以选择讲解替换成人工讲解，利用键盘交互
+multi_onefloor_nav_v31_addkey_action.py
+
+#使用下方代码替换文件名和网口名即可
+python3 multi_nav.py eth0
+```
+
+### 可选1. 动作执行
+1.g1_action.py系列文件为动作文件，可以让机器人按着预设动作运动
+2.可内置到导航程序中，修改对应的程序名，已预留接口
+
+### 可选2. 语音交互导航（基于 py-xiaozhi）
 
 详细配置请参考 `PythonProject/py-xiaozhi-main/README.md`，这里给出关键步骤。
 
 **安装依赖：**
 ```bash
 cd WK/PythonProject/py-xiaozhi-main
+
 pip install -r requirements.txt
 ```
 
