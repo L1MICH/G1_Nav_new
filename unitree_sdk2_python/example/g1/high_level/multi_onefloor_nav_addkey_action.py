@@ -392,10 +392,10 @@ if __name__ == '__main__':
         robot_controller.speak("启动成功")
 
         waypoints = [
-            {"x": 5.33, "y": -1.30, "yaw": 1.09 ,"action_id": 31,"say_text": "3333"},
-            {"x": -0.15, "y":-1.62, "yaw": -0.83, "action_id":31,"say_text": "7777"},
-            {"x": 5.13, "y": 7.04, "yaw": 2.77, "action_id": 31, "say_text": "8888"},
-            {"x": -1.78, "y": 6.37, "yaw": -2.98, "action_id": 31, "say_text": "2222"},
+            {"x": 5.33, "y": -1.30, "yaw": 1.09 ,"action_id": 31,"say_text": "第一句话"},
+            {"x": -0.15, "y":-1.62, "yaw": -0.83, "action_id":31,"say_text": "第二句话"},
+            {"x": 5.13, "y": 7.04, "yaw": 2.77, "action_id": 31, "say_text": "第三句话"},
+            {"x": -1.78, "y": 6.37, "yaw": -2.98, "action_id": 31, "say_text": "第四句话"},
         ]
 
         navigate_to_waypoints(waypoints, robot_controller)

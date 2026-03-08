@@ -90,6 +90,22 @@ gedit MID360_config.json
 ```
 根据你的网络环境修改 “lidar_configs” 里的雷达 IP 和 “host_net_info” 里的本机 IP
 雷达ip一般不用修改：192.168.123.120；
+
+```bash
+#修改下面的四个ip为你自己的
+"host_net_info" : {
+      "cmd_data_ip" : "192.168.123.164",
+      "cmd_data_port": 56101,
+      "push_msg_ip": "192.168.123.164",
+      "push_msg_port": 56201,
+      "point_data_ip": "192.168.123.164",
+      "point_data_port": 56301,
+      "imu_data_ip" : "192.168.123.164",
+      "imu_data_port": 56401,
+      "log_data_ip" : "",
+      "log_data_port": 56501
+```
+
 用ifconfig查自己的ip，要在同一网段下
 
 
@@ -101,20 +117,47 @@ gedit map_builder_node.cpp
 ```
 将文件中地图保存路径（如 /home/water/map/）改为你自己的路径
 
+### 4. 安装相关依赖
+tf2_sensor_msgs
+```bash
+sudo apt-get update
 
-### 4. 编译 ROS 工作空间
+sudo apt-get install ros-noetic-tf2-sensor-msgs
+```
+
+更新环境
+```bash
+source /opt/ros/noetic/setup.bash
+```
+如果遇到安装中源的问题换个源就可以解决
+
+
+### 5. 编译 ROS 工作空间
 ```bash
 cd WK/G1Nav2D
 ```
-建议先单独编译 livox_ros_driver2 和 fastlio2，避免消息头文件找不到
+1.最开始建议清除所有的build中间文件
+2.先单独编译 livox_ros_driver2 和 fastlio2，避免消息头文件找不到
 ```bash
 catkin_make -DROS_EDITION=ROS1 --pkg livox_ros_driver2
 
-catkin_make -DROS_EDITION=ROS1 --pkg fastlio2
+#这一步可能会有很多头文件或者依赖缺失的问题，如缺少GTSAM，根据终端报错去安装对应的文件即可
+
+#编译ok后用下面这个命令看是否有CustomMsg.h头文件，有就ok
+ls devel/include/livox_ros_driver2
+
+#随时可以用下面命令刷新环境，或者写到.bashrc里面，双ROS2环境记得切换或注释
+source /opt/ros/noetic/setup.bash
+
+
+catkin_make -DROS_EDITION=ROS1 --pkg fastlio -j4
 
 #整体编译
 
 catkin_make
+
+#如果不行，用这个命令
+catkin_make -DROS_EDITION=ROS1
 
 source devel/setup.bash
 ```
@@ -125,6 +168,29 @@ sudo apt install ros-noetic-teb-local-planner
 ros-noetic-global-planner
 ros-noetic-costmap-server
 ```
+
+### 6. 安装宇树运动接口功能包
+unitree_sdk2_python
+
+先安装cyclonedds 
+```bash
+git clone https://github.com/eclipse-cyclonedds/cyclonedds -b releases/0.10.x 
+cd cyclonedds && mkdir build install && cd build
+cmake .. -DCMAKE_INSTALL_PREFIX=../install
+cmake --build . --target install
+```
+
+设置 `CYCLONEDDS_HOME` 为刚刚编译好的 cyclonedds 所在路径，再安装 unitree_sdk2_python
+```bash
+export CYCLONEDDS_HOME="/home/unitree/Documents/unitree_sdk2_python/cyclonedds/install"
+pip3 install -e .
+
+```
+```bash
+echo $CYCLONEDDS_HOME
+echo $LD_LIBRARY_PATH
+```
+添加 cyclonedds 到 ~/.bashrc，然后 source ~/.bashrc
 
 ---
 
