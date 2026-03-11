@@ -137,7 +137,7 @@ source /opt/ros/noetic/setup.bash
 cd WK/G1Nav2D
 ```
 1.最开始建议清除所有的build中间文件
-2.先单独编译 livox_ros_driver2 和 fastlio2，避免消息头文件找不到
+2.先单独编译 livox_ros_driver2 和 fastlio，避免消息头文件找不到
 ```bash
 catkin_make -DROS_EDITION=ROS1 --pkg livox_ros_driver2
 
@@ -182,7 +182,7 @@ cmake --build . --target install
 
 设置 `CYCLONEDDS_HOME` 为刚刚编译好的 cyclonedds 所在路径，再安装 unitree_sdk2_python
 ```bash
-export CYCLONEDDS_HOME="/home/unitree/Documents/unitree_sdk2_python/cyclonedds/install"
+export CYCLONEDDS_HOME="/home/water/WK/unitree_sdk2_python/cyclonedds/install"
 pip3 install -e .
 
 ```
@@ -204,7 +204,7 @@ cd WK/G1Nav2D
 
 source devel/setup.bash
 
-roslaunch fastlio2 mapping.launch
+roslaunch fastlio mapping.launch
 ```
 
 **保存地图：**
@@ -245,14 +245,12 @@ cd WK/G1Nav2D
 
 source devel/setup.bash
 
-roslaunch fastlio2 navigation.launch
+roslaunch fastlio navigation.launch
 ```
 3. 初始重定位（如有需要）：
 ```bash
-rosservice call /slam_reloc
+rosservice call /slam_reloc "{pcd_path: '/home/water/WK/G1Nav2D/src/fastlio2/PCD/map.pcd', x: 0.0, y: 0.0, z: 0.0, roll: 0.0, pitch: 0.0, yaw: 0.0}"
 
-“{pcd_path: ‘/home/你的用户名/WK/G1Nav2D/src/fastlio2/PCD/map.pcd’,
-x: 0.0, y: 0.0, z: 0.0, roll: 0.0, pitch: 0.0, yaw: 0.0}”
 ```
 
 在 RViz 中确认点云与地图是否配准良好。
@@ -294,7 +292,7 @@ multi_nav.py
 
 #提供讲解暂停和暂停时实现动作：如跳舞，挥手以及自定义内置动作，预留接口
 #也可以选择讲解替换成人工讲解，利用键盘交互
-multi_onefloor_nav_v31_addkey_action.py
+multi_onefloor_nav_addkey_action.py
 
 #使用下方代码替换文件名和网口名即可
 python3 multi_nav.py eth0
