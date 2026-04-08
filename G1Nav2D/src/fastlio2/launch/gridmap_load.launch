@@ -5,7 +5,7 @@
     <arg name="rviz" default="true" />
 
     <!-- 设置地图的配置文件 -->
-    <arg name="2dmap_file" default="/home/unitree/map/mymap.yaml" />
+    <arg name="2dmap_file" default="/home/unitree/map/2dmap.yaml" />
     <!-- <arg name="2dmap_file" default="$(find pcd_file)/grid_map/pcd2pgm/bbb.yaml" /> -->
     <arg name="2dmap_frame" default="map"/>
     <arg name="2dmap_topic" default="map_2d"/>      <!-- 注意map_server的地图话题名不能为数字开头 -->
