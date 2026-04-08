@@ -2,6 +2,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <cmath>
+#include <iomanip>
 #include <yaml-cpp/yaml.h>
 #include <ros/ros.h>
 #include <visualization_msgs/MarkerArray.h>
@@ -766,12 +768,36 @@ bool MapFileManager::saveYAML(const std::string& filename, const nav_msgs::Occup
     {
       return false;
     }
+
+    const auto sanitizeFinite = [](double value, double fallback) {
+      return std::isfinite(value) ? value : fallback;
+    };
+
+    const bool has_invalid_values =
+      !std::isfinite(map.info.resolution) ||
+      !std::isfinite(map.info.origin.position.x) ||
+      !std::isfinite(map.info.origin.position.y);
+
+    if (has_invalid_values)
+    {
+      ROS_WARN("保存地图时检测到非有限数值，已使用默认值替换，避免写入nan");
+    }
+
+    double resolution = sanitizeFinite(map.info.resolution, 0.05);
+    if (resolution <= 0.0)
+    {
+      resolution = 0.05;
+    }
+    const double origin_x = sanitizeFinite(map.info.origin.position.x, 0.0);
+    const double origin_y = sanitizeFinite(map.info.origin.position.y, 0.0);
+    const double origin_yaw = 0.0;
     
     // Write YAML
     file << "image: " << pgm_basename << "\n";
-    file << "resolution: " << map.info.resolution << "\n";
-    file << "origin: [" << map.info.origin.position.x << ", " 
-         << map.info.origin.position.y << ", 0.0]\n";
+    file << std::fixed << std::setprecision(6);
+    file << "resolution: " << resolution << "\n";
+    file << "origin: [" << origin_x << ", " 
+         << origin_y << ", " << std::setprecision(5) << origin_yaw << "]\n";
     file << "negate: 0\n";
     file << "occupied_thresh: 0.65\n";
     file << "free_thresh: 0.196\n";
