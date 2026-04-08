@@ -27,14 +27,8 @@ Panels:
     Name: Time
     SyncMode: 0
     SyncSource: global_filtered_cloud
-  - Class: interactive_goal_panel::InteractiveGoalPanel
-    Name: InteractiveGoalPanel
-  - Class: map_edit_rviz_plugin::MapEditPanel
+  - Class: ros_map_edit/MapEditPanel
     Name: MapEditPanel
-  - Class: map_edit_rviz_plugin::MapEditPanel
-    Name: MapEditPanel
-  - Class: interactive_goal_panel::InteractiveGoalPanel
-    Name: InteractiveGoalPanel
 Preferences:
   PromptSaveOnExit: true
 Toolbars:
