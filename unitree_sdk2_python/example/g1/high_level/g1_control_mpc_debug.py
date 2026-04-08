@@ -40,11 +40,17 @@ class MPCController:
         # 约束参数
         self.max_vx = 1.5
         self.max_vy = 0.6
-        self.max_wz = 1.5
+        self.max_wz = 3.0
         self.max_acc_v = 1.0
         self.max_acc_w = 1.2
         self.Q_v = 10.0
         self.R_v = 3.0
+
+        # 低速死区补偿参数
+        self.stop_epsilon = 0.01
+        self.min_effective_vx = 0.30
+        self.min_effective_vy = 0.30
+        self.min_effective_wz = 0.12
         
         # 状态变量
         self.target_vx = 0.0
@@ -87,13 +93,16 @@ class MPCController:
     def solve_mpc_step(self, v_current, v_target, v_last_cmd, max_v, max_acc):
         # 【重要修复】钳位限制，防止 OSQP 崩溃
         v_current = np.clip(v_current, -max_v, max_v)
+        v_last_cmd = np.clip(v_last_cmd, -max_v, max_v)
         
         P = sp.csc_matrix([[2 * (self.Q_v + self.R_v)]])
         q = np.array([-2 * (self.Q_v * v_target + self.R_v * v_last_cmd)])
         
         acc_limit = max_acc * self.dt
-        lower_bound = np.array([max(-max_v, v_current - acc_limit)])
-        upper_bound = np.array([min(max_v, v_current + acc_limit)])
+        # 关键：约束窗口围绕上一拍命令，而不是当前实测速度。
+        # 否则在底盘低速死区下，速度测量长期接近 0，会把命令永久卡在很小范围内。
+        lower_bound = np.array([max(-max_v, v_last_cmd - acc_limit)])
+        upper_bound = np.array([min(max_v, v_last_cmd + acc_limit)])
         
         A_box = sp.csc_matrix([[1.0]])
         
@@ -102,8 +111,20 @@ class MPCController:
         res = prob.solve()
         
         if res.info.status != 'solved':
+            print(f"[WARNING] MPC 求解失败，状态: {res.info.status}")
             return 0.0
         return res.x[0]
+
+    def apply_deadzone_compensation(self, cmd, target, min_effective, max_v):
+        # 目标接近 0 时直接回零，避免抖动。
+        if abs(target) <= self.stop_epsilon:
+            return 0.0
+
+        # 目标明显非零但命令落在死区内时，提升到最小有效值。
+        if abs(target) >= min_effective and abs(cmd) < min_effective:
+            cmd = np.sign(target) * min_effective
+
+        return float(np.clip(cmd, -max_v, max_v))
 
     def control_loop(self, event):
         # --- 调试打印区 ---
@@ -124,10 +145,21 @@ class MPCController:
         cmd_vy = self.solve_mpc_step(self.current_vy, self.target_vy, self.last_cmd_vy, self.max_vy, self.max_acc_v)
         cmd_wz = self.solve_mpc_step(self.current_wz, self.target_wz, self.last_cmd_wz, self.max_wz, self.max_acc_w)
 
-        if abs(cmd_vx) < 0.01 and abs(cmd_vy) < 0.01 and abs(cmd_wz) < 0.01:
+        cmd_vx = self.apply_deadzone_compensation(cmd_vx, self.target_vx, self.min_effective_vx, self.max_vx)
+        cmd_vy = self.apply_deadzone_compensation(cmd_vy, self.target_vy, self.min_effective_vy, self.max_vy)
+        cmd_wz = self.apply_deadzone_compensation(cmd_wz, self.target_wz, self.min_effective_wz, self.max_wz)
+
+        # 每秒打印一次状态，确认数据流
+        if int(rospy.get_time() * 10) % 5 == 0: 
+            print(f"======cmd_vel: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
+        # ------------------
+
+        if abs(cmd_vx) < self.stop_epsilon and abs(cmd_vy) < self.stop_epsilon and abs(cmd_wz) < self.stop_epsilon:
             self.sport_client.StopMove()
         else:
             self.sport_client.Move(cmd_vx, cmd_vy, cmd_wz)
+            # self.sport_client.Move(0.3, cmd_vy, cmd_wz)
+
         
         self.last_cmd_vx = cmd_vx
         self.last_cmd_vy = cmd_vy

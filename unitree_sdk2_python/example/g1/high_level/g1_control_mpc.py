@@ -43,8 +43,8 @@ class MPCController:
         self.max_wz = 1.5
         
         # 加速度设置较大，解决起步慢的问题
-        self.max_acc_v = 5.0   
-        self.max_acc_w = 5.0   
+        self.max_acc_v = 1.0   
+        self.max_acc_w = 1.0   
 
         # --- MPC 权重参数 ---
         self.Q_v = 10.0
@@ -103,14 +103,14 @@ class MPCController:
         self.target_wz = msg.angular.z
 
     def solve_mpc_step(self, v_current, v_target, v_last_cmd, max_v, max_acc):
-        v_current = np.clip(v_current, -max_v, max_v)
+        v_last_cmd = np.clip(v_last_cmd, -max_v, max_v)
         
         P = sp.csc_matrix([[2 * (self.Q_v + self.R_v)]])
         q = np.array([-2 * (self.Q_v * v_target + self.R_v * v_last_cmd)])
         
         acc_limit = max_acc * self.dt
-        lower_bound = np.array([max(-max_v, v_current - acc_limit)])
-        upper_bound = np.array([min(max_v, v_current + acc_limit)])
+        lower_bound = np.array([max(-max_v, v_last_cmd - acc_limit)])
+        upper_bound = np.array([min(max_v, v_last_cmd + acc_limit)])
         
         A_box = sp.csc_matrix([[1.0]])
         
