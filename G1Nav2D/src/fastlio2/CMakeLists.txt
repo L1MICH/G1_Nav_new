@@ -101,17 +101,32 @@ set(SRC_LIST ${COMMON_SRC} ${KDTREE_SRC} ${LIOBUILDER_SRC_LIST} ${ICPLOCALIZER_S
 
 add_executable(map_builder_node src/map_builder_node.cpp ${SRC_LIST})
 
+add_dependencies(map_builder_node
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
 target_link_libraries(map_builder_node
   ${catkin_LIBRARIES} ${PCL_LIBRARIES} gtsam
 )
 
 add_executable(localizer_node src/localizer_node.cpp ${SRC_LIST})
 
+add_dependencies(localizer_node
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
+
 target_link_libraries(localizer_node
   ${catkin_LIBRARIES} ${PCL_LIBRARIES}
 )
 
 add_executable(temp_node src/temp_node.cpp ${SRC_LIST})
+
+add_dependencies(temp_node
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+)
 
 target_link_libraries(temp_node
   ${catkin_LIBRARIES} ${PCL_LIBRARIES}
