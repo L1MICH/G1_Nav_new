@@ -14,6 +14,7 @@
 	<arg name="msg_frame_id" default="livox_frame"/>
 	<arg name="lidar_bag" default="true"/>
 	<arg name="imu_bag" default="true"/>
+	<arg name="node_output" default="screen"/>
 	<!--user configure parameters for ros end--> 
 
 	<param name="xfer_format" value="$(arg xfer_format)"/>
@@ -30,7 +31,7 @@
 
 	<node name="livox_lidar_publisher2" pkg="livox_ros_driver2"
 	      type="livox_ros_driver2_node" required="true"
-	      output="screen" args="$(arg cmdline_arg)"/>
+	      output="$(arg node_output)" args="$(arg cmdline_arg)"/>
 
 	<group if="$(arg rosbag_enable)">
     	<node pkg="rosbag" type="record" name="record" output="screen"
