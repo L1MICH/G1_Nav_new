@@ -1,2 +1,6 @@
 build/
 devel/
+ctrl.sh
+navigation.sh
+rpc.sh
+G1Nav2D/src/movebase/param/costmap_params_origin.yaml
