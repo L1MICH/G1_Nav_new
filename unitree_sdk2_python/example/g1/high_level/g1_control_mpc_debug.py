@@ -38,19 +38,23 @@ class MPCController:
         self.dt = 1.0 / self.control_freq
         
         # 约束参数
-        self.max_vx = 1.5
+        # self.max_vx = 1.5
+        self.max_vx = 1.8
         self.max_vy = 0.6
-        self.max_wz = 3.0
-        self.max_acc_v = 1.0
-        self.max_acc_w = 1.2
+        # self.max_wz = 0.3
+        self.max_wz = 0.45
+        self.max_acc_v = 0.8
+        self.max_acc_w = 1.5
         self.Q_v = 10.0
-        self.R_v = 3.0
+        # self.R_v = 3.0
+        self.R_v = 10.0
 
         # 低速死区补偿参数
+        # self.stop_epsilon = 0.01
         self.stop_epsilon = 0.01
         self.min_effective_vx = 0.30
         self.min_effective_vy = 0.30
-        self.min_effective_wz = 0.12
+        self.min_effective_wz = 0.16
         
         # 状态变量
         self.target_vx = 0.0
