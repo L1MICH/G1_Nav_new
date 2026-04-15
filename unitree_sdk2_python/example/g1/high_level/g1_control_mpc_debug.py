@@ -37,6 +37,10 @@ class MPCController:
         self.control_freq = 50.0
         self.dt = 1.0 / self.control_freq
 
+        self.is_print_info = True
+        self.print_frequent = 2.0  # 每 1 / self.print_frequent 秒打印一次信息流
+        self.last_print_timestamp = -1  # 上次打印信息时的时间戳
+
         # 约束参数
         self.max_vx = 2.5
         self.max_vy = 1.0
@@ -52,7 +56,7 @@ class MPCController:
         self.stop_epsilon = 0.05      # 初始值值0.01
         self.min_effective_vx = 0.20  # 0.2以下机器人不动
         self.min_effective_vy = 0.20  # 0.2以下机器人不动
-        self.min_effective_wz = 0.3   # 0.3以下机器人不动  
+        self.min_effective_wz = 0.30   # 0.3以下机器人不动  
         
         # 状态变量
         self.target_vx = 0.0
@@ -113,7 +117,7 @@ class MPCController:
         res = prob.solve()
         
         if res.info.status != 'solved':
-            print(f"[WARNING] MPC 求解失败，状态: {res.info.status}")
+            rospy.logwarn(f"[WARNING] MPC 求解失败，状态: {res.info.status}")
             return 0.0
         return res.x[0]
 
@@ -130,8 +134,12 @@ class MPCController:
 
     def control_loop(self, event):
         # --- 调试打印区 ---
-        # 每秒打印一次状态，确认数据流
-        if int(rospy.get_time() * 10) % 10 == 0: 
+        now_timestamp = int(rospy.get_time() * self.print_frequent)  
+        self.is_print_info = (now_timestamp != self.last_print_timestamp) 
+        if self.is_print_info:
+            self.last_print_timestamp = now_timestamp
+
+        if self.is_print_info: 
             state_str = "LOCKED" if not self.can_move else "ACTIVE"
             print(f"[State: {state_str}] "
                   f"Target: ({self.target_vx:.2f}, {self.target_vy:.2f}, {self.target_wz:.2f}) | "
@@ -156,12 +164,12 @@ class MPCController:
 
 
 
-        # 每秒打印一次状态，确认数据流
-        if int(rospy.get_time() * 10) % 10 == 0: 
+        # 打印机器人运动状态，确认数据流
+        if self.is_print_info: 
             if is_in_deadzone and not is_stop_command:
                 rospy.logwarn(f"cmd_vel低于死区: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
             else:
-                print(f"======cmd_vel: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
+                print(f"cmd_vel: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
         # ------------------
 
         if is_stop_command:
@@ -184,7 +192,8 @@ class MPCController:
             else:
                 cmd_vy = np.sign(cmd_vy) * self.min_effective_vy
             
-            rospy.logwarn(f"命令被死区限制，应用补偿: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
+            if self.is_print_info:
+                rospy.logwarn(f"命令被死区限制，应用补偿: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
             self.sport_client.Move(cmd_vx, cmd_vy, cmd_wz)
         else:
             self.sport_client.Move(cmd_vx, cmd_vy, cmd_wz)

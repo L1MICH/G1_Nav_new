@@ -58,7 +58,7 @@ class NavStatusLogger:
 		body = json.dumps(
             {
                 "module": "Navigation",
-                "payload": {"message": status_code, "state": status_name, "status_text": status_text},
+                "payload": {"message": str(status_name), "state": str(status_code), "status_text": str(status_text)},
             },
             indent=4,
             ensure_ascii=False,
