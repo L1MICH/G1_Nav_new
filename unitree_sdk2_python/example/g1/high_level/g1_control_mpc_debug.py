@@ -37,7 +37,7 @@ class MPCController:
         self.control_freq = 50.0
         self.dt = 1.0 / self.control_freq
 
-        self.is_print_info = True
+        self.is_print_info = True  # 是否打印机器人状态信息
         self.print_frequent = 2.0  # 每 1 / self.print_frequent 秒打印一次信息流
         self.last_print_timestamp = -1  # 上次打印信息时的时间戳
 
