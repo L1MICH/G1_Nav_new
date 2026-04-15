@@ -36,25 +36,23 @@ class MPCController:
         self.can_move = False
         self.control_freq = 50.0
         self.dt = 1.0 / self.control_freq
-        
+
         # 约束参数
-        # self.max_vx = 1.5
-        self.max_vx = 1.8
-        self.max_vy = 0.6
-        # self.max_wz = 0.3
-        self.max_wz = 0.45
-        self.max_acc_v = 0.8
+        self.max_vx = 2.5
+        self.max_vy = 1.0
+        self.max_wz = 2.5
+        self.max_acc_v = 1.5
         self.max_acc_w = 1.5
-        self.Q_v = 10.0
-        # self.R_v = 3.0
-        self.R_v = 10.0
+        
+        # MPC 权重
+        self.Q_v = 10.0  # 增大 Q_v 更加重视跟踪目标速度，响应更快
+        self.R_v = 3.0  # 增大 R_v 输出更平滑、加减速更温和
 
         # 低速死区补偿参数
-        # self.stop_epsilon = 0.01
-        self.stop_epsilon = 0.01
-        self.min_effective_vx = 0.30
-        self.min_effective_vy = 0.30
-        self.min_effective_wz = 0.16
+        self.stop_epsilon = 0.05      # 初始值值0.01
+        self.min_effective_vx = 0.20  # 0.2以下机器人不动
+        self.min_effective_vy = 0.20  # 0.2以下机器人不动
+        self.min_effective_wz = 0.3   # 0.3以下机器人不动  
         
         # 状态变量
         self.target_vx = 0.0
@@ -133,11 +131,11 @@ class MPCController:
     def control_loop(self, event):
         # --- 调试打印区 ---
         # 每秒打印一次状态，确认数据流
-        if int(rospy.get_time() * 10) % 5 == 0: 
+        if int(rospy.get_time() * 10) % 10 == 0: 
             state_str = "LOCKED" if not self.can_move else "ACTIVE"
             print(f"[State: {state_str}] "
-                  f"Target: ({self.target_vx:.2f}, {self.target_wz:.2f}) | "
-                  f"Current: ({self.current_vx:.2f}, {self.current_wz:.2f})")
+                  f"Target: ({self.target_vx:.2f}, {self.target_vy:.2f}, {self.target_wz:.2f}) | "
+                  f"Current: ({self.current_vx:.2f}, {self.current_vy:.2f}, {self.current_wz:.2f})")
         # ------------------
 
         if not self.can_move:
@@ -153,13 +151,41 @@ class MPCController:
         cmd_vy = self.apply_deadzone_compensation(cmd_vy, self.target_vy, self.min_effective_vy, self.max_vy)
         cmd_wz = self.apply_deadzone_compensation(cmd_wz, self.target_wz, self.min_effective_wz, self.max_wz)
 
+        is_stop_command = (abs(cmd_vx) < self.stop_epsilon and abs(cmd_vy) < self.stop_epsilon and abs(cmd_wz) < self.stop_epsilon)
+        is_in_deadzone = (abs(cmd_vx) < self.min_effective_vx and abs(cmd_vy) < self.min_effective_vy and abs(cmd_wz) < self.min_effective_wz) 
+
+
+
         # 每秒打印一次状态，确认数据流
-        if int(rospy.get_time() * 10) % 5 == 0: 
-            print(f"======cmd_vel: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
+        if int(rospy.get_time() * 10) % 10 == 0: 
+            if is_in_deadzone and not is_stop_command:
+                rospy.logwarn(f"cmd_vel低于死区: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
+            else:
+                print(f"======cmd_vel: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
         # ------------------
 
-        if abs(cmd_vx) < self.stop_epsilon and abs(cmd_vy) < self.stop_epsilon and abs(cmd_wz) < self.stop_epsilon:
+        if is_stop_command:
             self.sport_client.StopMove()
+        elif is_in_deadzone:
+            # 导航模块和MPC均输出了一个小于死区的命令，这会导致机器人被死区卡住
+            # 这时我们强行输出一个最小有效命令，帮助它“跳出”死区
+            # 补偿策略：分别将vx vy vz的绝对值对死区值进行归一化，选择归一化值最大的速度分量进行速度补偿到死区值
+            # 计算各分量归一化后绝对值
+            norm_vx = abs(cmd_vx) / self.min_effective_vx
+            norm_vy = abs(cmd_vy) / self.min_effective_vy
+            norm_wz = abs(cmd_wz) / self.min_effective_wz
+
+            # 找到最大归一化分量
+            max_norm = max(norm_vx, norm_vy, norm_wz)
+            if max_norm == norm_wz :
+                cmd_wz = np.sign(cmd_wz) * self.min_effective_wz
+            elif max_norm == norm_vx:
+                cmd_vx = np.sign(cmd_vx) * self.min_effective_vx
+            else:
+                cmd_vy = np.sign(cmd_vy) * self.min_effective_vy
+            
+            rospy.logwarn(f"命令被死区限制，应用补偿: ({cmd_vx:.2f}, {cmd_vy:.2f}, {cmd_wz:.2f})")
+            self.sport_client.Move(cmd_vx, cmd_vy, cmd_wz)
         else:
             self.sport_client.Move(cmd_vx, cmd_vy, cmd_wz)
             # self.sport_client.Move(0.3, cmd_vy, cmd_wz)
