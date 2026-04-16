@@ -38,7 +38,7 @@ class MPCController:
         self.dt = 1.0 / self.control_freq
 
         self.is_print_info = True  # 是否打印机器人状态信息
-        self.print_frequent = 2.0  # 每 1 / self.print_frequent 秒打印一次信息流
+        self.print_frequent = 4.0  # 每 1 / self.print_frequent 秒打印一次信息流
         self.last_print_timestamp = -1  # 上次打印信息时的时间戳
 
         # 约束参数
@@ -57,6 +57,7 @@ class MPCController:
         self.min_effective_vx = 0.20  # 0.2以下机器人不动
         self.min_effective_vy = 0.20  # 0.2以下机器人不动
         self.min_effective_wz = 0.30   # 0.3以下机器人不动  
+        #self.min_effective_wz = 0.60
         
         # 状态变量
         self.target_vx = 0.0
@@ -186,7 +187,8 @@ class MPCController:
             # 找到最大归一化分量
             max_norm = max(norm_vx, norm_vy, norm_wz)
             if max_norm == norm_wz :
-                cmd_wz = np.sign(cmd_wz) * self.min_effective_wz
+                # cmd_wz = np.sign(cmd_wz) * self.min_effective_wz
+                cmd_wz = np.sign(cmd_wz) * self.min_effective_wz * 3.0
             elif max_norm == norm_vx:
                 cmd_vx = np.sign(cmd_vx) * self.min_effective_vx
             else:
