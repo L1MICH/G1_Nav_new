@@ -71,7 +71,9 @@ class MPCController:
         self.last_cmd_wz = 0.0
 
         # 订阅
-        self.cmd_vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.cmd_vel_callback)
+        # self.cmd_vel_sub = rospy.Subscriber("/cmd_vel", Twist, self.cmd_vel_callback)
+        self.cmd_vel_sub = rospy.Subscriber("/cmd_vel_smooth", Twist, self.cmd_vel_callback)
+        
         self.path_sub = rospy.Subscriber("/move_base/GlobalPlanner/plan", Path, self.path_callback)
         
         # DDS 订阅
